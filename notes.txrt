@@ -1,0 +1,79 @@
+
+Product Requirements Document (PRD): Unified Wishlist
+
+Overview
+Unified Wishlist is a cross-platform solution (React Native + Expo client, Node.js server) that enables users to save, preview, and manage wishlist items from any URL. The system supports deep linking, robust data persistence, deduplication, and accessibility, with a secure and resilient backend for preview extraction.
+
+1. Client Application (React Native + Expo, TypeScript)
+
+1.1 Deep Linking
+- Support deep links in the format: centscape://add?url=
+- When opened, the app should launch the Add flow with the provided URL pre-filled.
+
+1.2 Add Flow
+- User can paste or provide a URL (manually or via deep link).
+- The app fetches a preview of the URL (title, image, price, etc.) from the backend.
+- User reviews the preview and can add the item to their wishlist.
+
+1.3 Wishlist Screen
+- Display a scrollable, virtualized list of saved items.
+- Each item displays:
+	- Title
+	- Image (with placeholder if missing/broken)
+	- Price (or 'N/A' if unavailable)
+	- Source domain (e.g., amazon.com)
+	- Created-at timestamp
+
+1.4 Persistence & Migration
+- Wishlist data must persist across app restarts.
+- Implement schema migration from v1 to v2, adding a new field: normalizedUrl.
+
+1.5 Deduplication
+- Prevent duplicate wishlist items.
+- Normalize URLs by:
+	- Stripping UTM parameters
+	- Lowercasing the host
+	- Removing fragments (#...)
+
+1.6 Resilience & UX
+- Show skeleton placeholders while loading.
+- On error, retry gracefully and display fallback images if preview images are missing.
+
+1.7 Accessibility
+- All tappable controls must have appropriate accessibilityLabel props.
+
+2. Server (Node.js + Express/Fastify, TypeScript)
+
+2.1 Endpoint
+- POST /preview
+	- Request: { url: string, raw_html?: string }
+	- Response: { title, image, price, currency, siteName, sourceUrl }
+
+2.2 Extraction Logic
+- Extract preview data in the following order:
+	1. Open Graph tags
+	2. Twitter Card tags
+	3. oEmbed
+	4. Fallback: <title>, <img>, price selectors/regex
+
+2.3 Security & Robustness
+- Enforce a timeout of ≤ 5 seconds per request.
+- Limit to 3 redirects.
+- Max HTML size: 512 KB.
+- Only process responses with Content-Type: text/html.
+- Set a custom User-Agent header.
+- Block requests to private/loopback IPs (SSRF protection).
+- Rate-limit: 10 requests per minute per IP.
+- Invalid URLs return HTTP 400 with a clear error message.
+
+3. Non-Functional Requirements
+- Codebase must be TypeScript throughout.
+- All user-facing features must be accessible.
+- Error states must be user-friendly and actionable.
+- The system must be resilient to network and data errors.
+
+4. Success Criteria
+- Users can add, view, and persist wishlist items from any valid URL.
+- No duplicate items are allowed.
+- The app is accessible and resilient.
+- The backend is secure, robust, and performant.

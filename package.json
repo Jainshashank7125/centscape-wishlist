@@ -1,0 +1,7 @@
+{
+    "name": "centscape-root",
+    "private": true,
+    "scripts": {
+        "verify": "npm --prefix server run test && npm --prefix app run typecheck"
+    }
+}
